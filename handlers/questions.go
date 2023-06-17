@@ -29,16 +29,23 @@ func PrevPage(userID int64) {
 	}
 }
 
-func createQuestion(word models.Word, level string) Question {
-	var incorrectWords []models.Word
+func getIncorrectOptions(word models.Word, level string) []string {
 	db := database.DB()
+	var incorrectWords []models.Word
 	db.Where("level = ? AND english != ?", level, word.English).Order(gorm.Expr("random()")).Limit(3).Find(&incorrectWords)
 
-	question := fmt.Sprintf("'%s' kelimesinin Türkçe karşılığı nedir ?", word.English)
-	options := []string{word.Turkish}
+	var options []string
 	for _, incorrectWord := range incorrectWords {
 		options = append(options, incorrectWord.Turkish)
 	}
+	return options
+}
+
+func createQuestion(word models.Word, level string) Question {
+	options := []string{word.Turkish}
+	options = append(options, getIncorrectOptions(word, level)...)
+
+	question := fmt.Sprintf("'%s' kelimesinin Türkçe karşılığı nedir ?", word.English)
 
 	rand.Shuffle(len(options), func(i, j int) { options[i], options[j] = options[j], options[i] })
 
@@ -66,7 +73,7 @@ func sendQuestion(bot *tgbotapi.BotAPI, chatID int64, question Question) {
 	correctAnswers[chatID] = question.Answer
 }
 
-func handleAnswer(bot *tgbotapi.BotAPI, chatID int64, selectedOption string) {
+/*func handleAnswer(bot *tgbotapi.BotAPI, chatID int64, selectedOption string) {
 	correctAnswer := correctAnswers[chatID]
 	if selectedOption == correctAnswer {
 		msg := tgbotapi.NewMessage(chatID, "Doğru!")
@@ -74,5 +81,21 @@ func handleAnswer(bot *tgbotapi.BotAPI, chatID int64, selectedOption string) {
 	} else {
 		msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("Yanlış. Doğru cevap %s.", correctAnswer))
 		bot.Send(msg)
+	}
+	delete(correctAnswers, chatID)
+}*/
+
+func handleAnswer(bot *tgbotapi.BotAPI, chatID int64, selectedOption string) bool {
+	correctAnswer := correctAnswers[chatID]
+	if selectedOption == correctAnswer {
+		msg := tgbotapi.NewMessage(chatID, "Doğru!")
+		bot.Send(msg)
+		delete(correctAnswers, chatID)
+		return true
+	} else {
+		msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("Yanlış. Doğru cevap %s.", correctAnswer))
+		bot.Send(msg)
+		delete(correctAnswers, chatID)
+		return false
 	}
 }

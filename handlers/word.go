@@ -30,17 +30,6 @@ func getAllWords(level string) []models.Word {
 	return words
 }
 
-/*func UpdateWord(userID int64, wordID string, english string, turkish string) error {
-	var word models.UserWord
-	db := database.DB()
-	if err := db.Where("id = ? AND user_id = ?", wordID, userID).First(&word).Error; err != nil {
-		return err
-	}
-	word.English = english
-	word.Turkish = turkish
-	return db.Save(&word).Error
-}*/
-
 func UpdateWord(userID int64, originalEnglish string, newEnglish string, newTurkish string) error {
 	db := database.DB()
 

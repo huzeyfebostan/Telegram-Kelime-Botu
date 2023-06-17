@@ -10,6 +10,7 @@ import (
 )
 
 type UserState struct {
+	UserID          int64
 	SelectedOption  string
 	InQuiz          bool
 	CurrentWord     models.UserWord
@@ -203,7 +204,13 @@ func HandleCallbackQuery(bot *tgbotapi.BotAPI, query *tgbotapi.CallbackQuery) {
 		bot.Send(msg)
 	} else if strings.HasPrefix(query.Data, "option_") {
 		selectedOption := strings.TrimPrefix(query.Data, "option_")
-		handleAnswer(bot, query.Message.Chat.ID, selectedOption)
+		//handleAnswer(bot, query.Message.Chat.ID, selectedOption)
+		isCorrect := handleAnswer(bot, query.Message.Chat.ID, selectedOption)
+		if isCorrect {
+			correctCount[query.Message.Chat.ID]++
+		} else {
+			incorrectCount[query.Message.Chat.ID]++
+		}
 		questionCount[query.Message.Chat.ID]++
 		if questionCount[query.Message.Chat.ID] < 10 {
 			if len(userQuestions[query.Message.Chat.ID]) > 0 {
@@ -261,6 +268,7 @@ func HandleCallbackQuery(bot *tgbotapi.BotAPI, query *tgbotapi.CallbackQuery) {
 	} else {
 		levelPrefix := "level_"
 		if strings.HasPrefix(query.Data, levelPrefix) {
+			userQuestions[query.Message.Chat.ID] = nil
 			userLevels[query.Message.Chat.ID] = strings.TrimPrefix(query.Data, levelPrefix)
 			if userStates[query.Message.Chat.ID].SelectedOption == "select_level" {
 				words := getAllWords(userLevels[query.Message.Chat.ID])

@@ -13,7 +13,7 @@ func DB() *gorm.DB {
 }
 
 func ConnectDB() {
-	dbInfo := "host=localhost user=******** password=********** dbname=words_database port=5432 sslmode=disable"
+	dbInfo := "host=localhost user=****** password=**** dbname=****** port=5432 sslmode=disable"
 
 	var err error
 	db, err = gorm.Open(postgres.Open(dbInfo), &gorm.Config{})
